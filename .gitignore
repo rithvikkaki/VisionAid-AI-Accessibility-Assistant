@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.log
+audio/*.mp3
+android_native/.gradle/
+android_native/build/
+android_native/app/build/
+.idea/
+.vscode/
+tessdata/

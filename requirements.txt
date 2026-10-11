@@ -1,0 +1,10 @@
+Flask>=2.2.5
+pytest>=7.4.0
+flask-cors>=4.0.0
+python-dotenv>=1.0.0
+openai
+google-generativeai
+gTTS
+pytesseract
+Pillow
+gunicorn>=20.1.0

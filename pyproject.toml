@@ -1,0 +1,25 @@
+[project]
+name = "AI-Accessibility-Assistant"
+version = "0.1.0"
+dependencies = [
+    "flask",
+    "flask-cors",
+    "python-dotenv",
+    "openai",
+    "google-generativeai",
+    "gtts",
+    "pytesseract",
+    "pillow"
+]
+
+[tool.pyright]
+include = ["."]
+exclude = [".venv"]
+venvPath = "E:/AI-Accessibility-Assistant"
+venv = ".venv"
+reportMissingImports = false
+reportMissingModuleSource = false
+
+[tool.pyre]
+source_directories = ["."]
+search_path = ["E:/AI-Accessibility-Assistant/.venv/Lib/site-packages"]

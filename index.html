@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Accessibility Assistant</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --background-color: #f8fafc;
+            --text-color: #1e293b;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: #eff6ff;
+        }
+
+        .upload-area input {
+            display: none;
+        }
+
+        .upload-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
+        }
+
+        .upload-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        #preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .result-section {
+            margin-top: 2rem;
+            text-align: left;
+            display: none;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .result-section h3 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        .summary-box {
+            background-color: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            white-space: pre-wrap;
+        }
+
+        .loading {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        /* Accessibility Focus */
+        .upload-btn:focus, audio:focus {
+            outline: 3px solid #fbbf24;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Accessibility Assistant</h1>
+        
+        <div class="upload-area" id="drop-zone">
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;">Click to upload or drag an image here</p>
+            <input type="file" id="image-input" accept="image/*">
+            <button class="upload-btn" onclick="document.getElementById('image-input').click()">Select Image</button>
+            <img id="preview-image" alt="Uploaded image preview">
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing image... This may take a few seconds.</p>
+        </div>
+
+        <div class="result-section" id="result-section">
+            <h3>AI Summary:</h3>
+            <div class="summary-box" id="summary-text"></div>
+            
+            <h3>Audio Explanation:</h3>
+            <audio id="audio-player" controls>
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('image-input');
+        const previewImage = document.getElementById('preview-image');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('result-section');
+        const summaryText = document.getElementById('summary-text');
+        const audioPlayer = document.getElementById('audio-player');
+        
+        // n8n Webhook URL
+        const WEBHOOK_URL = 'http://192.168.0.104:5000/upload-image';
+        
+        // Flask Backend URL (for audio)
+        const FLASK_URL = 'http://192.168.0.104:5000';
+
+        imageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // Prepare upload
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Show loading
+            loading.style.display = 'flex';
+            resultSection.style.display = 'none';
+
+            try {
+                // Send to n8n
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Failed to process image');
+
+                const data = await response.json();
+                console.log("Server Response:", data);
+
+                // Update UI
+                if (data.ai_summary) {
+                    summaryText.textContent = data.ai_summary;
+                } else if (data.extracted_text) {
+                     summaryText.textContent = data.extracted_text;
+                } else {
+                    summaryText.textContent = "No text found.";
+                }
+
+                if (data.audio_file) {
+                    // Flask returns 'audio/filename.mp3', we need full URL
+                    // Remove 'audio/' if included in Flask's response because Flask route might handle it differently
+                    // Route: /audio/<filename> -> Directory: audio/
+                    // generate_audio returns: audio/filename.mp3
+                    // So we want: http://localhost:5000/audio/filename.mp3
+                    // But wait, if data.audio_file is "audio/foo.mp3", then http://localhost:5000/audio/foo.mp3
+                    // The flask route is @app.route('/audio/<path:filename>')
+                    // If we request /audio/audio/foo.mp3, it looks for audio/audio/foo.mp3? 
+                    // Let's verify app.py logic.
+                    // app.py: return send_from_directory(AUDIO_DIR, filename)
+                    // If url is /audio/foo.mp3, filename=foo.mp3. Open AUDIO_DIR/foo.mp3.
+                    // If audio_file string is "audio/foo.mp3", we should strip "audio/" or adjust logic.
+                    
+                    let audioPath = data.audio_file;
+                    if (audioPath.startsWith('audio/')) {
+                        audioPath = audioPath.replace('audio/', '');
+                    }
+                    
+                    const fullAudioUrl = `${FLASK_URL}/audio/${audioPath}`;
+                    console.log("Audio URL:", fullAudioUrl);
+                    
+                    audioPlayer.src = fullAudioUrl;
+                    audioPlayer.play().catch(e => console.log("Auto-play prevented:", e));
+                }
+
+                resultSection.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while processing the image. Please ensure n8n and Flask are running.');
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

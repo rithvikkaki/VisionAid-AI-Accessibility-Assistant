@@ -1,0 +1,9 @@
+{
+    "venvPath": "E:\\AI-Accessibility-Assistant",
+    "venv": ".venv",
+    "extraPaths": [
+        "E:\\AI-Accessibility-Assistant\\.venv\\Lib\\site-packages"
+    ],
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none"
+}

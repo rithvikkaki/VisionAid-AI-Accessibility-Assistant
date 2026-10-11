@@ -1,0 +1,12 @@
+{
+  "source_directories": [
+    "."
+  ],
+  "exclude": [
+    ".*"
+  ],
+  "search_path": [
+    "E:/AI-Accessibility-Assistant/.venv/Lib/site-packages"
+  ],
+  "python_executable": "E:/AI-Accessibility-Assistant/.venv/Scripts/python.exe"
+}
