@@ -75,13 +75,20 @@ class VisionAidViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun loadState(): UiState {
+        val rawSavedUrl = prefs.getString("server_url", null)
+        val activeUrl = if (rawSavedUrl.isNullOrEmpty() || rawSavedUrl.contains("192.168.") || rawSavedUrl.contains("10.") || rawSavedUrl.contains("127.0.0.1")) {
+            prefs.edit().putString("server_url", RetrofitClient.BASE_URL).apply()
+            RetrofitClient.BASE_URL
+        } else {
+            rawSavedUrl
+        }
         return UiState(
             currentLang = prefs.getString("lang", "en") ?: "en",
             targetLang = prefs.getString("target", "en") ?: "en",
             readingLevel = prefs.getString("level", "medium") ?: "medium",
             currentSpeed = prefs.getFloat("speed", 1.0f),
             isDarkTheme = prefs.getBoolean("dark", true),
-            serverUrl = prefs.getString("server_url", RetrofitClient.BASE_URL) ?: RetrofitClient.BASE_URL
+            serverUrl = activeUrl
         ).also {
             RetrofitClient.updateBaseUrl(it.serverUrl)
         }

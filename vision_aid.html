@@ -539,10 +539,10 @@
 
     <script>
         // --- CONSTANTS & CONFIG ---
-        const FLASK_URL_BASE = 'http://127.0.0.1:5000/';
-        const WEBHOOK_URL = 'http://127.0.0.1:5000/upload-image'; 
-        const N8N_CHAT_URL = 'http://127.0.0.1:5000/process-text'; // Point to local Flask
-        const N8N_TRANSLATE_URL = 'http://127.0.0.1:5000/translate'; // Point to local Flask
+        const FLASK_URL_BASE = window.location.origin + '/';
+        const WEBHOOK_URL = '/upload-image'; 
+        const N8N_CHAT_URL = '/process-text';
+        const N8N_TRANSLATE_URL = '/translate';
 
         let isProcessingAI = false;
         let recognition = null;

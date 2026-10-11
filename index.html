@@ -175,11 +175,11 @@
         const summaryText = document.getElementById('summary-text');
         const audioPlayer = document.getElementById('audio-player');
         
-        // n8n Webhook URL
-        const WEBHOOK_URL = 'http://192.168.0.104:5000/upload-image';
+        // API URLs
+        const WEBHOOK_URL = '/upload-image';
         
         // Flask Backend URL (for audio)
-        const FLASK_URL = 'http://192.168.0.104:5000';
+        const FLASK_URL = window.location.origin;
 
         imageInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];

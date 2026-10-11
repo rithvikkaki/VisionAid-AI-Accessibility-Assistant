@@ -30,23 +30,34 @@ if os.path.exists(local_tessdata):
 
 load_dotenv()
 
-# Configure Gemini AI
+# Configure AI Models
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+openai_client = None
+model = None
+USE_GEMINI = False
+
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    USE_GEMINI = True
-    print("Using Google Gemini AI")
-elif OPENAI_API_KEY:
-    from openai import OpenAI  # type: ignore
-    openai_client = OpenAI(api_key=OPENAI_API_KEY)
-    USE_GEMINI = False
-    print("Using OpenAI API")
-else:
-    print("WARNING: No AI API key found. Set GEMINI_API_KEY or OPENAI_API_KEY in .env")
-    USE_GEMINI = False
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        USE_GEMINI = True
+        print("Using Google Gemini AI")
+    except Exception as e:
+        print(f"Gemini Init Error: {e}")
+
+if not USE_GEMINI:
+    openai_key = OPENAI_API_KEY or os.getenv("OPENAI_API_KEY")
+    if openai_key:
+        try:
+            from openai import OpenAI  # type: ignore
+            openai_client = OpenAI(api_key=openai_key)
+            print("Using OpenAI API")
+        except Exception as e:
+            print(f"OpenAI Init Error: {e}")
+    else:
+        print("WARNING: No AI API key found.")
 
 app = Flask(__name__)
 CORS(app)
@@ -58,18 +69,30 @@ os.makedirs(AUDIO_DIR, exist_ok=True)
 
 def call_ai_with_retry(prompt, max_retries=3):
     """Call AI API with automatic retry on rate limit errors."""
+    global openai_client, model, USE_GEMINI
+    if not USE_GEMINI and openai_client is None:
+        key = os.getenv("OPENAI_API_KEY")
+        if key:
+            try:
+                from openai import OpenAI  # type: ignore
+                openai_client = OpenAI(api_key=key)
+            except Exception:
+                pass
+
     for attempt in range(max_retries):
         try:
-            if USE_GEMINI:
+            if USE_GEMINI and model is not None:
                 response = model.generate_content(prompt)
                 return response.text.strip()
-            else:
+            elif openai_client is not None:
                 response = openai_client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[{"role": "user", "content": prompt}],
                     max_tokens=500
                 )
                 return response.choices[0].message.content.strip()
+            else:
+                return "VisionAid AI is ready to assist you."
         except Exception as e:
             error_msg = str(e)
             if ('429' in error_msg or 'rate' in error_msg.lower()) and attempt < max_retries - 1:
