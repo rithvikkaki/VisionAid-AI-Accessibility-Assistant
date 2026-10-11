@@ -372,6 +372,7 @@ class VisionAidViewModel(application: Application) : AndroidViewModel(applicatio
     fun resetSettings() {
         prefs.edit().clear().apply()
         _ui.update { loadState() }
+        updateServerUrl("https://visionaid-api.onrender.com/")
         speakHint(I18n.get(_ui.value.currentLang, "settings_reset"))
     }
 

@@ -6,8 +6,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    // Verified local laptop IP
-    private var _baseUrl = "http://192.168.29.201:5000/"
+    // Permanent cloud deployment - works from anywhere, no laptop needed!
+    private var _baseUrl = "https://visionaid-api.onrender.com/"
     val BASE_URL: String get() = _baseUrl
 
     private val client = OkHttpClient.Builder()
