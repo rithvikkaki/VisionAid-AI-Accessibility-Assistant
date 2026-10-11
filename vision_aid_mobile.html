@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>VisionAid AI - AI Accessibility Assistant</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FFD84D', // Premium Yellow
+                        accent: {
+                            yellow: '#FFD84D',
+                            blue: '#4D9FFF',
+                            pink: '#FF4D9F'
+                        },
+                        bg: {
+                            charcoal: '#0F0F0F',
+                            dark: '#141414'
+                        },
+                        surface: {
+                            dark: '#1A1A1A',
+                            light: '#242424'
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Outfit', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'], // For "Swipe up to repeat"
+                    },
+                    borderRadius: {
+                        'pill': '100px',
+                        '2xl': '24px',
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(255, 216, 77, 0.2)',
+                        'glow-strong': '0 0 40px rgba(255, 216, 77, 0.4)',
+                        'fab': '0 8px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(255, 216, 77, 0.2)',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-glow': 'pulseGlow 2s infinite ease-in-out',
+                        'oscillate': 'oscillate 1.5s infinite ease-in-out',
+                        'ping-slow': 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        pulseGlow: { '0%, 100%': { opacity: '0.8', boxShadow: '0 0 4px #FFD84D' }, '50%': { opacity: '1', boxShadow: '0 0 16px #FFD84D' } },
+                        oscillate: { '0%, 100%': { transform: 'scaleY(1)' }, '50%': { transform: 'scaleY(1.8)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
+    <style type="text/css">
+        :root {
+            --bg-main: #0F0F0F;
+            --bg-dark: #141414;
+            --surface-dark: #1A1A1A;
+            --text-main: #FFFFFF;
+            --text-muted: rgba(255,255,255,0.4);
+            --text-ghost: rgba(255,255,255,0.2);
+            --border: rgba(255,255,255,0.05);
+            --slider-bg: rgba(255,255,255,0.1);
+        }
+
+        .light-mode {
+            --bg-main: #F2F2F7;
+            --bg-dark: #FFFFFF;
+            --surface-dark: #FFFFFF;
+            --text-main: #1C1C1E;
+            --text-muted: rgba(60,60,67,0.6);
+            --text-ghost: rgba(60,60,67,0.3);
+            --border: rgba(60,60,67,0.12);
+            --slider-bg: rgba(60,60,67,0.1);
+        }
+
+        body { 
+            -webkit-tap-highlight-color: transparent; 
+            overscroll-behavior-y: none; 
+            background-color: var(--bg-main); 
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Hijack Tailwind colors for theme support */
+        .bg-bg-charcoal { background-color: var(--bg-main) !important; }
+        .bg-bg-dark { background-color: var(--bg-dark) !important; }
+        .bg-surface-dark { background-color: var(--surface-dark) !important; }
+        .text-white { color: var(--text-main) !important; }
+        .text-white\/90 { color: var(--text-main) !important; opacity: 0.9; }
+        .text-white\/40 { color: var(--text-muted) !important; }
+        .text-white\/30 { color: var(--text-muted) !important; opacity: 0.75; }
+        .text-white\/20 { color: var(--text-ghost) !important; }
+        .border-white\/5 { border-color: var(--border) !important; }
+        .bg-white\/10 { background-color: var(--slider-bg) !important; }
+        .bg-white\/5 { background-color: var(--border) !important; }
+        .hover\:bg-white\/5:hover { background-color: var(--border) !important; }
+        
+        .app-view { display: none; height: 100%; width: 100%; position: absolute; top: 0; left: 0; }
+        .app-view.active { display: flex; animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .pill-button { 
+            display: flex; align-items: center; justify-content: center; gap: 1rem; 
+            background-color: var(--surface-dark); border: 1px solid var(--border); 
+            border-radius: 100px; transition: all 0.2s; height: 96px; width: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .pill-button:active { transform: scale(0.95); }
+        
+        /* Oscilloscope Wave Animation */
+        .wave-container { display: flex; align-items: center; justify-content: center; gap: 4px; height: 100px; }
+        .wave-bar { width: 4px; border-radius: 4px; background: #FFD84D; animation: oscillate 1.2s infinite ease-in-out; }
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; height: 40px; }
+        .wave-bar:nth-child(1) { animation-delay: 0.2s; height: 20px; }
+        .wave-bar:nth-child(3) { animation-delay: 0s; height: 60px; }
+        .wave-bar:nth-child(4) { animation-delay: 0.15s; height: 35px; }
+
+        /* Custom Slider */
+        input[type=range].custom-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: var(--slider-bg);
+            height: 4px;
+            border-radius: 2px;
+        }
+        input[type=range].custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #FFD84D;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255,216,77,0.5);
+        }
+    </style>
+</head>
+
+<body class="bg-bg-charcoal text-white font-display h-[100dvh] w-full selection:bg-accent-yellow selection:text-bg-charcoal">
+
+    <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(this)">
+
+    <!-- ================= SCREEN 1: HOME HUB ================= -->
+    <div id="view-home" class="app-view active flex-col bg-bg-charcoal">
+        <div class="relative flex h-full w-full flex-col max-w-md mx-auto px-6 py-6 justify-between">
+            <header class="flex items-center justify-between shrink-0 animate-fade-in">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-accent-yellow shadow-[0_0_8px_rgba(255,216,77,0.8)]"></div>
+                    <span class="text-xs font-bold tracking-[0.2em] uppercase text-white/90">VISIONAID</span>
+                </div>
+                <div id="status-container" class="flex items-center gap-2 transition-all duration-500">
+                    <div id="status-dot" class="w-2 h-2 rounded-full bg-white/20"></div>
+                    <span id="status-text" class="text-[10px] uppercase font-bold tracking-widest text-white/40">Checking...</span>
+                </div>
+                <button onclick="nav('settings')" class="text-white/40 hover:text-white">
+                    <span class="material-symbols-outlined">settings</span>
+                </button>
+            </header>
+
+            <main class="flex-1 flex flex-col justify-center gap-6 w-full animate-fade-in" style="animation-delay: 0.1s;">
+                <button onclick="a11yClick(event, () => startListening(), 'speak_hint')"
+                    class="pill-button group shadow-glow hover:shadow-glow-strong">
+                    <span class="material-symbols-outlined text-accent-yellow text-4xl">mic</span>
+                    <span data-i18n="btn_speak" class="text-3xl font-bold tracking-tight text-white">Speak</span>
+                </button>
+
+                <button onclick="a11yClick(event, () => triggerCapture(), 'capture_hint')"
+                    class="pill-button group shadow-glow hover:shadow-glow-strong">
+                    <span class="material-symbols-outlined text-accent-yellow text-4xl">photo_camera</span>
+                    <span data-i18n="btn_capture" class="text-3xl font-bold tracking-tight text-white">Capture</span>
+                </button>
+            </main>
+
+            <footer onclick="openA11yMenu()" class="shrink-0 flex flex-col items-center pb-20 opacity-40 cursor-pointer active:scale-95 transition-all group">
+                <div class="w-12 h-1.5 bg-white/20 rounded-full mb-3 group-hover:bg-accent-yellow transition-colors"></div>
+                <p data-i18n="swipe_menu" class="text-[10px] uppercase font-bold tracking-[0.2em] group-hover:text-white transition-colors">Swipe up for accessibility menu</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ================= BOTTOM NAVIGATION ================= -->
+    <nav id="bottom-nav" class="fixed bottom-0 w-full bg-bg-charcoal border-t border-white/5 px-8 pt-4 pb-8 flex justify-between z-50">
+        <button onclick="nav('home')" class="nav-item flex flex-col items-center gap-1 text-white/40 active-nav">
+            <span class="material-symbols-outlined text-2xl">crop_free</span>
+            <span data-i18n="nav_scan" class="text-[10px] font-bold uppercase tracking-widest">Scan</span>
+        </button>
+        <button onclick="nav('saved-audio')" class="nav-item flex flex-col items-center gap-1 text-white/40">
+            <span class="material-symbols-outlined text-2xl">history</span>
+            <span data-i18n="nav_history" class="text-[10px] font-bold uppercase tracking-widest">History</span>
+        </button>
+        <button onclick="nav('settings')" class="nav-item flex flex-col items-center gap-1 text-white/40">
+            <span class="material-symbols-outlined text-2xl">settings</span>
+            <span data-i18n="nav_settings" class="text-[10px] font-bold uppercase tracking-widest">Settings</span>
+        </button>
+    </nav>
+
+    <style>
+        .active-nav { color: #FFD84D !important; }
+        .active-nav::after { content: ''; width: 20px; height: 2px; background: #FFD84D; margin-top: 4px; border-radius: 2px; }
+    </style>
+
+    <!-- ================= SCREEN 2: PROCESSING ================= -->
+    <div id="view-processing" class="app-view flex-col items-center justify-center bg-bg-charcoal">
+        <div class="mb-8">
+            <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">VISIONAID AI</span>
+        </div>
+        
+        <!-- Oscilloscope Wave -->
+        <div class="wave-container mb-12">
+            <div class="wave-bar" style="height: 30px; animation-delay: 0.1s"></div>
+            <div class="wave-bar" style="height: 60px; animation-delay: 0.3s"></div>
+            <div class="wave-bar" style="height: 90px; animation-delay: 0.0s"></div>
+            <div class="wave-bar" style="height: 50px; animation-delay: 0.2s"></div>
+            <div class="wave-bar" style="height: 25px; animation-delay: 0.4s"></div>
+        </div>
+
+        <h2 data-i18n="text_processing" class="text-2xl font-bold tracking-tight text-white mb-2">Processing...</h2>
+        
+        <button onclick="cancelProcessing()" class="absolute bottom-16 size-16 rounded-full flex items-center justify-center text-white/30 hover:text-white transition-all">
+            <span class="material-symbols-outlined text-4xl">close</span>
+        </button>
+    </div>
+
+    <!-- ================= SCREEN 4: SETTINGS ================= -->
+    <div id="view-settings" class="app-view flex-col bg-bg-charcoal px-6 py-6 overflow-y-auto no-scrollbar">
+        <header class="flex items-center justify-between mb-12">
+            <button onclick="nav('home')" class="size-10 rounded-full flex items-center justify-center hover:bg-white/5">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1 data-i18n="nav_settings" class="text-3xl font-bold">Settings</h1>
+            <div class="size-10"></div>
+        </header>
+
+        <section class="mb-10">
+            <h2 data-i18n="label_reading_level" class="text-lg font-bold mb-6">Reading Level</h2>
+            <div class="flex bg-surface-dark p-1 rounded-2xl">
+                <button onclick="setReadingLevel('simple')" id="rl-simple" data-i18n="rl_simple" class="flex-1 py-3 text-sm font-bold opacity-40">Simple</button>
+                <button onclick="setReadingLevel('medium')" id="rl-medium" data-i18n="rl_medium" class="flex-1 py-3 text-sm font-bold bg-white/5 rounded-xl border-b-2 border-accent-yellow">Medium</button>
+                <button onclick="setReadingLevel('detailed')" id="rl-detailed" data-i18n="rl_detailed" class="flex-1 py-3 text-sm font-bold opacity-40">Detailed</button>
+            </div>
+            <p data-i18n="reading_hint" class="text-[10px] uppercase tracking-widest text-white/30 text-center mt-4">Detail level of voice descriptions</p>
+        </section>
+
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 data-i18n="label_voice_speed" class="text-lg font-bold">Voice Speed</h2>
+                <span id="settings-speed-label" class="text-accent-yellow font-bold text-lg">1.2x</span>
+            </div>
+            <div class="px-2">
+                <input type="range" min="0.5" max="2.0" step="0.1" value="1.2" 
+                    oninput="updateSpeedFromSlider(this.value)" 
+                    class="custom-slider w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer">
+                <div class="flex justify-between mt-4">
+                    <span data-i18n="label_slow" class="text-[10px] font-bold uppercase tracking-widest text-white/20">SLOW</span>
+                    <span data-i18n="label_fast" class="text-[10px] font-bold uppercase tracking-widest text-white/20">FAST</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h2 data-i18n="label_interface" class="text-xs font-bold text-white/30 uppercase tracking-[0.2em] mb-6">Interface</h2>
+            
+            <div class="flex items-center justify-between py-4 border-b border-white/5">
+                <span data-i18n="label_lang" class="text-lg font-medium">Language</span>
+                <button onclick="nav('languages')" class="flex items-center gap-2 text-accent-yellow font-bold">
+                    <span data-i18n="btn_change">Change</span>
+                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between py-6">
+                <div>
+                    <span data-i18n="label_dark_mode" class="text-lg font-medium block">Dark Mode</span>
+                    <span data-i18n="label_high_contrast" class="text-[10px] uppercase font-bold text-white/20 tracking-widest mt-1">High contrast environment</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="dark-mode-toggle" checked class="sr-only peer" onchange="toggleTheme(this.checked)">
+                    <div class="w-14 h-8 bg-white/10 rounded-full peer peer-checked:bg-accent-yellow after:content-[''] after:absolute after:top-1 after:left-1 after:bg-black after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-6"></div>
+                </label>
+            </div>
+        </section>
+
+        <div class="mt-8 text-center">
+            <button onclick="resetSettings()" data-i18n="btn_reset" class="text-red-400 font-bold">Reset All Settings</button>
+        </div>
+
+        <footer data-i18n="app_version" class="mt-12 text-center opacity-10 text-[10px] font-bold uppercase tracking-[0.3em]">
+            VisionAid v2.4.1
+        </footer>
+    </div>
+
+    <!-- ================= SCREEN 5: FOCUS MODE (LISTENING) ================= -->
+    <div id="view-focus" class="app-view flex-col items-center bg-bg-charcoal px-6 py-6 transition-all duration-500">
+        <header class="w-full flex justify-between items-center mb-16">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-white/40">settings_suggest</span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-white/60">FOCUS MODE</span>
+            </div>
+            <button onclick="stopListening()" class="bg-surface-dark px-4 py-2 rounded-full flex items-center gap-2 text-white/60 border border-white/5 shadow-lg active:scale-95">
+                <span class="text-xs font-bold uppercase tracking-widest">Exit</span>
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </header>
+
+        <div class="relative flex-1 flex flex-col items-center justify-center -mt-20">
+            <!-- Pulsing Rings -->
+            <div class="absolute size-64 border border-accent-yellow/5 rounded-full animate-ping-slow"></div>
+            <div class="absolute size-48 border border-accent-yellow/10 rounded-full animate-pulse" style="animation-duration: 4s"></div>
+            
+            <div class="relative size-32 bg-surface-dark rounded-full flex items-center justify-center shadow-glow border border-white/10">
+                <span class="material-symbols-outlined text-5xl text-accent-yellow">mic</span>
+            </div>
+
+            <div class="mt-12 text-center">
+                <h2 data-i18n="text_listening" class="text-4xl font-bold mb-4">Listening...</h2>
+                <p data-i18n="listening_hint" class="text-white/40 px-12 leading-relaxed">Speak naturally. Ask for a summary, read text, or describe surroundings.</p>
+            </div>
+        </div>
+
+        <div class="shrink-0 pb-12 flex flex-col items-center gap-8">
+            <!-- Mini visualizer -->
+            <div class="flex items-end gap-1 h-8">
+                <div class="w-1 bg-accent-yellow animation-oscillate" style="height: 40%; animation-delay: 0.1s"></div>
+                <div class="w-1 bg-accent-yellow animation-oscillate" style="height: 80%; animation-delay: 0.3s"></div>
+                <div class="w-1 bg-accent-yellow animation-oscillate" style="height: 100%; animation-delay: 0.0s"></div>
+                <div class="w-1 bg-accent-yellow animation-oscillate" style="height: 60%; animation-delay: 0.2s"></div>
+                <div class="w-1 bg-accent-yellow animation-oscillate" style="height: 30%; animation-delay: 0.15s"></div>
+            </div>
+
+            <button onclick="toggleListeningPause()" class="flex items-center gap-2 text-white/20 hover:text-white/40 transition-all uppercase tracking-[0.2em] font-bold text-[10px]">
+                <span class="material-symbols-outlined text-sm">front_hand</span>
+                <span>Tap anywhere to pause</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= SCREEN 6: TUTORIAL ================= -->
+    <div id="view-tutorial" class="app-view flex-col bg-bg-charcoal px-6 py-6 transition-all duration-500">
+        <header class="w-full flex justify-between items-center mb-12">
+            <button onclick="nav('home')" class="size-10 rounded-full flex items-center justify-center hover:bg-white/5">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">TUTORIAL</span>
+            <div class="size-10"></div>
+        </header>
+
+        <main class="flex-1 flex flex-col items-center justify-center text-center -mt-12">
+            <h2 class="text-6xl font-serif font-bold mb-12 leading-tight">Swipe up<br>to repeat</h2>
+            
+            <div class="relative mb-12 group">
+                <div class="absolute inset-0 bg-accent-yellow/5 rounded-full blur-3xl group-hover:bg-accent-yellow/10 transition-all"></div>
+                <img src="C:\Users\victus\.gemini\antigravity\brain\36e5694b-1f78-47e5-aad6-65d005b4ba6d\hand_tutorial_icon_1773749916492.png" 
+                     alt="Swipe up gesture" class="relative w-64 h-64 object-contain">
+            </div>
+
+            <p class="text-white/40 text-lg px-8 max-w-xs">Try it now to hear the instruction again</p>
+        </main>
+        
+        <div class="px-6 pb-12">
+            <button onclick="nav('home')" class="w-full h-16 rounded-3xl bg-accent-yellow text-black font-bold text-xl shadow-glow hover:scale-[1.02] transition-all">Got it</button>
+        </div>
+    </div>
+
+    <!-- ================= SCREEN 3: PLAYER ================= -->
+    <div id="view-player" class="app-view flex-col bg-bg-charcoal">
+        <header class="flex-none flex items-center justify-between px-6 h-28 bg-bg-dark border-b border-white/5 shadow-2xl relative z-50">
+            <button onclick="nav('home')" class="size-12 rounded-full flex items-center justify-center hover:bg-white/5 flex-none transition-all active:scale-90">
+                <span class="material-symbols-outlined text-3xl">arrow_back</span>
+            </button>
+            <div class="flex-1 relative overflow-hidden h-full flex items-center mx-2">
+                <div id="player-lang-bar" class="flex items-center gap-12 overflow-x-auto no-scrollbar px-12 font-bold text-base tracking-[0.2em] uppercase whitespace-nowrap">
+                    <!-- Lang buttons injected here -->
+                </div>
+                <!-- Subtle Fade overlays -->
+                <div class="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-bg-dark to-transparent pointer-events-none"></div>
+                <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-bg-dark to-transparent pointer-events-none"></div>
+            </div>
+            <button onclick="nav('languages')" class="size-12 rounded-full flex items-center justify-center hover:bg-white/5 flex-none transition-all active:scale-90">
+                <span class="material-symbols-outlined text-3xl">language</span>
+            </button>
+        </header>
+
+        <main class="flex-1 flex flex-col items-center justify-start px-10 text-center pt-40 pb-12 overflow-y-auto no-scrollbar relative z-10">
+            <h1 id="player-title" data-i18n="player_ready" class="text-2xl font-bold mb-4 mt-4 leading-tight">Ready to Scan</h1>
+            <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-12">Chapter 4</p>
+            
+            <button onclick="togglePlay()" class="relative group size-32 bg-accent-yellow rounded-full flex items-center justify-center shadow-glow-strong hover:scale-105 active:scale-95 transition-all">
+                <span id="play-icon" class="material-symbols-outlined text-black text-6xl" style="font-variation-settings: 'FILL' 1;">pause</span>
+            </button>
+
+            <div class="mt-20 flex items-center gap-10">
+                <button onclick="adjustSpeed(-0.1)" class="text-white/20 hover:text-white/60"><span class="material-symbols-outlined text-4xl">remove</span></button>
+                <span id="speed-label" class="text-3xl font-bold w-20">1.0x</span>
+                <button onclick="adjustSpeed(0.1)" class="text-white/20 hover:text-white/60"><span class="material-symbols-outlined text-4xl">add</span></button>
+            </div>
+        </main>
+        
+        <div class="p-8 pb-32 flex flex-col items-center gap-6">
+            <button onclick="a11yClick(event, () => startListening(), 'btn_ask_question')" class="flex items-center gap-3 px-10 py-4 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold text-sm">
+                <span class="material-symbols-outlined text-accent-yellow">mic</span>
+                <span data-i18n="btn_ask_question">Ask a Question</span>
+            </button>
+
+            <div class="flex flex-col items-center gap-2 opacity-30">
+                <span class="material-symbols-outlined">expand_less</span>
+                <span data-i18n="swipe_menu" class="text-[10px] font-bold uppercase tracking-[0.3em]">Swipe up to repeat</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SCREEN 4: SAVED AUDIO (HISTORY) ================= -->
+    <div id="view-saved-audio" class="app-view flex-col bg-bg-charcoal px-6 py-6 transition-all duration-500">
+        <header class="flex-none flex items-center justify-between mb-10">
+            <button onclick="nav('home')" class="size-12 rounded-full flex items-center justify-center hover:bg-white/5">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1 class="text-2xl font-bold">Saved Audio</h1>
+            <button class="size-12 rounded-full flex items-center justify-center hover:bg-white/5 text-white/60">
+                <span class="material-symbols-outlined">search</span>
+            </button>
+        </header>
+
+        <main id="history-list" class="flex-1 overflow-y-auto flex flex-col gap-6 no-scrollbar pb-32">
+            <!-- Dynamic Category/Date items -->
+            <div class="flex flex-col gap-4">
+                <!-- Example Item -->
+                <div class="flex justify-between items-center group cursor-pointer" onclick="playMock('Photosynthesis Overview')">
+                    <div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-accent-yellow transition-colors">Photosynthesis Overview</h3>
+                        <p class="text-sm text-white/30 font-medium">Just now • 3:42</p>
+                    </div>
+                    <button class="size-12 bg-white/5 rounded-full flex items-center justify-center text-accent-yellow group-hover:bg-accent-yellow group-hover:text-black transition-all">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    </button>
+                </div>
+
+                <div class="flex justify-between items-center group cursor-pointer" onclick="playMock('Hamlet, Act 1 Summary')">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Hamlet, Act 1 Summary</h3>
+                        <p class="text-sm text-white/30 font-medium">Yesterday • 5:12</p>
+                    </div>
+                    <button class="size-12 bg-white/5 rounded-full flex items-center justify-center text-accent-yellow">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    </button>
+                </div>
+                
+                <div class="flex justify-between items-center group cursor-pointer" onclick="playMock('Quadratic Formula Explanation')">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Quadratic Formula Explanation</h3>
+                        <p class="text-sm text-white/30 font-medium">Oct 22 • 1:05</p>
+                    </div>
+                    <button class="size-12 bg-white/5 rounded-full flex items-center justify-center text-accent-yellow">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Mic Button -->
+        <button onclick="nav('focus')" class="absolute bottom-28 right-8 size-16 bg-accent-yellow rounded-full flex items-center justify-center shadow-fab hover:scale-110 active:scale-90 transition-all text-black">
+            <span class="material-symbols-outlined text-3xl font-bold">mic</span>
+        </button>
+    <!-- Templates -->
+    <template id="history-template">
+        <div class="flex justify-between items-center group cursor-pointer animate-slide-up" onclick="playHistoryItem(this.dataset.id)">
+            <div>
+                <h3 class="text-lg font-bold text-white truncate max-w-[240px]">Photo Scan</h3>
+                <p class="text-sm text-white/30 font-medium">Today • 2:45</p>
+            </div>
+            <button class="size-12 bg-white/5 rounded-full flex items-center justify-center text-accent-yellow active:scale-90 transition-all">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+            </button>
+        </div>
+    </template>
+
+    </div>
+
+    <!-- ================= SCREEN 7: LANGUAGES ================= -->
+    <div id="view-languages" class="app-view flex-col bg-bg-charcoal px-6 py-6 overflow-y-auto no-scrollbar">
+        <header class="flex items-center justify-between mb-10">
+            <button onclick="nav('player')" class="size-12 rounded-full flex items-center justify-center hover:bg-white/5">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1 class="text-2xl font-bold">Select Language</h1>
+            <div class="size-12"></div>
+        </header>
+
+        <div id="languages-list" class="flex flex-col gap-2 pb-20">
+            <!-- Languages injected here -->
+        </div>
+    </div>
+
+    <!-- ================= SCREEN 5: ACCESSIBILITY MENU (BOTTOM SHEET) ================= -->
+    <div id="view-a11y-menu" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300" onclick="closeA11yMenu()">
+        <div id="a11y-menu-content" class="absolute bottom-0 w-full bg-bg-charcoal rounded-t-[3rem] p-8 pb-12 flex flex-col gap-6 translate-y-full transition-all duration-500 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]" onclick="event.stopPropagation()">
+            <div class="w-12 h-1.5 bg-white/20 rounded-full self-center mb-2"></div>
+            <h2 data-i18n="menu_title" class="text-2xl font-bold text-center mb-4 text-white">Accessibility Menu</h2>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="repeatLastSummary()" class="flex flex-col items-center gap-3 p-6 rounded-3xl bg-white/5 border border-white/10 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-accent-yellow text-4xl">replay</span>
+                    <span data-i18n="menu_repeat" class="font-bold text-sm text-center text-white">Repeat Last</span>
+                </button>
+                <button onclick="cycleVoiceSpeed()" class="flex flex-col items-center gap-3 p-6 rounded-3xl bg-white/5 border border-white/10 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-accent-yellow text-4xl">speed</span>
+                    <span data-i18n="menu_speed" class="font-bold text-sm text-center text-white">Cycle Speed</span>
+                </button>
+                <button onclick="nav('languages')" class="flex flex-col items-center gap-3 p-6 rounded-3xl bg-white/5 border border-white/10 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-accent-yellow text-4xl">language</span>
+                    <span data-i18n="menu_lang" class="font-bold text-sm text-center text-white">Language</span>
+                </button>
+                <button onclick="cycleReadingLevel()" class="flex flex-col items-center gap-3 p-6 rounded-3xl bg-white/5 border border-white/10 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-accent-yellow text-4xl">description</span>
+                    <span data-i18n="menu_level" class="font-bold text-sm text-center text-white">Complexity</span>
+                </button>
+            </div>
+            
+            <button onclick="closeA11yMenu()" class="mt-4 py-5 rounded-full bg-white/5 border border-white/10 font-bold text-white/60 active:scale-95 transition-all">
+                <span data-i18n="menu_close">Close Menu</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & CONFIG ---
+        const FLASK_URL_BASE = 'http://127.0.0.1:5000/';
+        const WEBHOOK_URL = 'http://127.0.0.1:5000/upload-image'; 
+        const N8N_CHAT_URL = 'http://127.0.0.1:5000/process-text'; // Point to local Flask
+        const N8N_TRANSLATE_URL = 'http://127.0.0.1:5000/translate'; // Point to local Flask
+
+        let isProcessingAI = false;
+        let recognition = null;
+
+        const LANGUAGES = [
+            { code: 'en', name: 'English', label: 'EN' },
+            { code: 'te', name: 'Telugu', label: 'TE' },
+            { code: 'hi', name: 'Hindi', label: 'HI' },
+            { code: 'ta', name: 'Tamil', label: 'TA' },
+            { code: 'kn', name: 'Kannada', label: 'KN' },
+            { code: 'ml', name: 'Malayalam', label: 'ML' },
+            { code: 'mr', name: 'Marathi', label: 'MR' },
+            { code: 'bn', name: 'Bengali', label: 'BN' },
+            { code: 'gu', name: 'Gujarati', label: 'GU' },
+            { code: 'pa', name: 'Punjabi', label: 'PA' },
+            { code: 'ur', name: 'Urdu', label: 'UR' },
+            { code: 'fr', name: 'French', label: 'FR' },
+            { code: 'es', name: 'Spanish', label: 'ES' },
+            { code: 'de', name: 'German', label: 'DE' },
+            { code: 'ja', name: 'Japanese', label: 'JA' }
+        ];
+
+        const UI_LABELS = {
+            en: {
+                nav_scan: "Scan", nav_history: "History", nav_settings: "Settings",
+                btn_speak: "Speak", btn_capture: "Capture",
+                btn_ask_question: "Ask a Question", btn_change: "Change",
+                swipe_menu: "Swipe up for accessibility menu",
+                text_processing: "Processing...", text_listening: "Listening...",
+                listening_hint: "Speak naturally. Ask for a summary, read text, or describe surroundings.",
+                label_reading_level: "Reading Level", label_voice_speed: "Voice Speed",
+                label_interface: "Interface", label_lang: "Language",
+                rl_simple: "Simple", rl_medium: "Medium", rl_detailed: "Detailed",
+                reading_hint: "Detail level of voice descriptions",
+                speak_hint: "Speak. Use your voice to ask questions. Double tap to start.",
+                capture_hint: "Capture. Analyze an image. Double tap to open camera.",
+                player_ready: "Ready to Scan",
+                label_dark_mode: "Dark Mode", label_high_contrast: "High contrast environment",
+                btn_reset: "Reset All Settings", app_version: "VisionAid v2.4.1",
+                label_slow: "SLOW", label_fast: "FAST",
+                menu_title: "Accessibility Menu", menu_repeat: "Repeat Last",
+                menu_speed: "Cycle Speed", menu_level: "Complexity",
+                menu_lang: "Language", menu_close: "Close Menu"
+            },
+            te: {
+                nav_scan: "స్కాన్", nav_history: "చరిత్ర", nav_settings: "అమరికలు",
+                btn_speak: "మాట్లాడండి", btn_capture: "క్యాప్చర్",
+                btn_ask_question: "ప్రశ్న అడగండి", btn_change: "మార్చు",
+                swipe_menu: "యాక్సెసిబిలిటీ మెను కోసం పైకి స్వైప్ చేయండి",
+                text_processing: "ప్రాసెసింగ్...", text_listening: "వింటున్నాను...",
+                listening_hint: "సహజంగా మాట్లాడండి. సారాంశం, వచనాన్ని చదవడం లేదా పరిసరాలను వివరించమని అడగండి.",
+                label_reading_level: "చదివే స్థాయి", label_voice_speed: "వాయిస్ వేగం",
+                label_interface: "ఇంటర్ఫేస్", label_lang: "భాష",
+                rl_simple: "సరళమైన", rl_medium: "మధ్యస్థ", rl_detailed: "వివరణాత్మక",
+                reading_hint: "వాయిస్ వివరణల వివరాల స్థాయి",
+                speak_hint: "మాట్లాడండి. ప్రశ్నలు అడగడానికి మీ వాయిస్‌ని ఉపయోగించండి. ప్రారంభించడానికి రెండుసార్లు నొక్కండి.",
+                capture_hint: "క్యాప్చర్. చిత్రాన్ని విశ్లేషించండి. కెమెరాను తెరవడానికి రెండుసార్లు నొక్కండి.",
+                player_ready: "స్కాన్ చేయడానికి సిద్ధంగా ఉంది",
+                label_dark_mode: "డార్క్ మోడ్", label_high_contrast: "అధిక కాంట్రాస్ట్ వాతావరణం",
+                btn_reset: "అన్ని అమరికలను రీసెట్ చేయండి", app_version: "విజన్ ఎయిడ్ v2.4.1",
+                label_slow: "నెమ్మదిగా", label_fast: "వేగంగా",
+                menu_title: "యాక్సెసిబిలిటీ మెను", menu_repeat: "చివరిది మళ్ళీ",
+                menu_speed: "వేగం మార్చండి", menu_level: "క్లిష్టత",
+                menu_lang: "భాష", menu_close: "మెను మూసివేయి"
+            },
+            hi: {
+                nav_scan: "स्कैन", nav_history: "इतिहास", nav_settings: "सेटिंग्स",
+                btn_speak: "बोलें", btn_capture: "कैप्चर",
+                btn_ask_question: "सवाल पूछें", btn_change: "बदलें",
+                swipe_menu: "एक्सेसिबिलिटी मेनू के लिए ऊपर स्वाइप करें",
+                text_processing: "प्रसंस्करण...", text_listening: "सुन रहा हूँ...",
+                listening_hint: "स्वाभाविक रूप से बोलें। सारांश, टेक्स्ट पढ़ने या परिवेश का वर्णन करने के लिए कहें।",
+                label_reading_level: "पढ़ने का स्तर", label_voice_speed: "आवाज की गति",
+                label_interface: "इंटरफ़ेस", label_lang: "भाषा",
+                rl_simple: "साधारण", rl_medium: "मध्यम", rl_detailed: "विस्तृत",
+                reading_hint: "आवाज विवरण का विवरण स्तर",
+                speak_hint: "बोलें। सवाल पूछने के लिए अपनी आवाज का उपयोग करें। शुरू करने के लिए दो बार टैप करें।",
+                capture_hint: "कैप्चर। छवि का विश्लेषण करें। कैमरा खोलने के लिए दो बार टैप करें।",
+                player_ready: "स्कैन करने के लिए तैयार",
+                label_dark_mode: "डार्क मोड", label_high_contrast: "उच्च कंट्रास्ट वातावरण",
+                btn_reset: "सभी सेटिंग्स रीसेट करें", app_version: "विज़न एड v2.4.1",
+                label_slow: "धीरे", label_fast: "तेज़",
+                menu_title: "एक्सेसिबिलिटी मेनू", menu_repeat: "फिर से दोहराएं",
+                menu_speed: "गति बदलें", menu_level: "जटिलता",
+                menu_lang: "भाषा", menu_close: "मेनू बंद करें"
+            },
+            ta: {
+                nav_scan: "ஸ்கேன்", nav_history: "வரலாறு", nav_settings: "அமைப்புகள்",
+                btn_speak: "பேசவும்", btn_capture: "பிடிப்பு",
+                btn_ask_question: "கேள்வி கேட்க", btn_change: "மாற்று",
+                swipe_menu: "அணுகல்தன்மை மெனுவிற்கு மேலே ஸ்வைப் செய்யவும்",
+                text_processing: "செயலாக்கம்...", text_listening: "கேட்கிறது...",
+                listening_hint: "இயல்பாகப் பேசுங்கள். சுருக்கம், உரையைப் படிக்க அல்லது சுற்றுப்புறங்களை விவரிக்கச் சொல்லுங்கள்.",
+                label_reading_level: "வாசிப்பு நிலை", label_voice_speed: "குரல் வேகம்",
+                label_interface: "இடைமுகம்", label_lang: "மொழி",
+                rl_simple: "எளிய", rl_medium: "நடுத்தர", rl_detailed: "விரிவான",
+                reading_hint: "குரல் விளக்கங்களின் விவரம் நிலை",
+                speak_hint: "பேசவும். கேள்விகள் கேட்க உங்கள் குரலைப் பயன்படுத்தவும். தொடங்க இருமுறை தட்டவும்.",
+                capture_hint: "பிடிப்பு. படத்தை பகுப்பாய்வு செய்யவும். கேமராவைத் திறக்க இருமுறை தட்டவும்.",
+                player_ready: "ஸ்கேன் செய்ய தயாராக உள்ளது",
+                label_dark_mode: "டார்க் பயன்முறை", label_high_contrast: "உயர் மாறுபாடு சூழல்",
+                btn_reset: "அனைத்து அமைப்புகளையும் மீட்டமைக்கவும்", app_version: "VisionAid v2.4.1",
+                label_slow: "மெதுவாக", label_fast: "வேகமாக",
+                menu_title: "அணுகல்தன்மை மெனு", menu_repeat: "மீண்டும் செய்",
+                menu_speed: "வேகத்தை மாற்றவும்", menu_level: "கிளிಷ್ಟತೆ",
+                menu_lang: "மொழி", menu_close: "மெனுவை மூடு"
+            },
+            kn: {
+                nav_scan: "ಸ್ಕ್ಯಾನ್", nav_history: "ಇತಿಹಾಸ", nav_settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+                btn_speak: "ಮಾತನಾಡಿ", btn_capture: "ಸೆರೆಹಿಡಿಯಿರಿ",
+                btn_ask_question: "ಪ್ರಶ್ನೆ ಕೇಳಿ", btn_change: "ಬದಲಿಸಿ",
+                swipe_menu: "ಪ್ರವೇಶಿಸುವಿಕೆ ಮೆನುವಿಗಾಗಿ ಮೇಲೆ ಸ್ವೈಪ್ ಮಾಡಿ",
+                text_processing: "ಸಂಸ್ಕರಿಸಲಾಗುತ್ತಿದೆ...", text_listening: "ಕೇಳಿಸಿಕೊಳ್ಳುತ್ತಿದೆ...",
+                listening_hint: "ಸಹಜವಾಗಿ ಮಾತನಾಡಿ. ಸಾರಾಂಶ, ಪಠ್ಯ ಓದಲು ಅಥವಾ ಸುತ್ತಮುತ್ತಲಿನ ವಿವರಣೆಯನ್ನು ಕೇಳಿ.",
+                label_reading_level: "ಓದುವ ಮಟ್ಟ", label_voice_speed: "ಧ್ವನಿ ವೇಗ",
+                label_interface: "ಇಂಟರ್ಫೇಸ್", label_lang: "ಭಾಷೆ",
+                rl_simple: "ಸರಳ", rl_medium: "ಮಧ್ಯಮ", rl_detailed: "ವಿವರವಾದ",
+                reading_hint: "ಧ್ವನಿ ವಿವರಣೆಗಳ ವಿವರ ಮಟ್ಟ",
+                speak_hint: "ಮಾತನಾಡಿ. ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಲು ನಿಮ್ಮ ಧ್ವನಿಯನ್ನು ಬಳಸಿ. ಪ್ರಾರಂಭಿಸಲು ಎರಡು ಬಾರಿ ಟ್ಯಾಪ್ ಮಾಡಿ.",
+                capture_hint: "ಸೆರೆಹಿಡಿಯಿರಿ. ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸಿ. ಕ್ಯಾಮರಾ ತೆರೆಯಲು ಎರಡು ಬಾರಿ ಟ್ಯಾಪ್ ಮಾಡಿ.",
+                player_ready: "ಸ್ಕ್ಯಾನ್ ಮಾಡಲು ಸಿದ್ಧವಾಗಿದೆ",
+                label_dark_mode: "ಡಾರ್ಕ್ ಮೋಡ್", label_high_contrast: "ಉನ್ನತ ಕಾಂಟ್ರಾಸ್ಟ್ ಪರಿಸರ",
+                btn_reset: "ಎಲ್ಲಾ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಮರುಹೊಂದಿಸಿ", app_version: "ವಿಜನ್ ಎಯ್ರಿಡ್ v2.4.1",
+                label_slow: "ನಿಧಾನ", label_fast: "ವೇಗದ",
+                menu_title: "ಪ್ರವೇಶಿಸುವಿಕೆ ಮೆನು", menu_repeat: "ಪುನರಾವರ್ತಿಸಿ",
+                menu_speed: "ವೇಗ ಬದಲಿಸಿ", menu_level: "ಕ್ಲಿಷ್ಟತೆ",
+                menu_lang: "ಭಾಷೆ", menu_close: "ಮೆನು ಮುಚ್ಚಿ"
+            },
+            ml: {
+                nav_scan: "സ്കാൻ", nav_history: "ചരിത്രം", nav_settings: "ക്രമീകരണങ്ങൾ",
+                btn_speak: "സംസാരിക്കുക", btn_capture: "ക്യാപ്ചർ",
+                btn_ask_question: "ചോദ്യം ചോദിക്കുക", btn_change: "മാറ്റുക",
+                swipe_menu: "ആക്സസിബിലിറ്റി മെനുവിനായി മുകളിലേക്ക് സ്വൈപ്പുചെയ്യുക",
+                text_processing: "പ്രോസസ്സിംഗ്...", text_listening: "ശ്രദ്ധിക്കുന്നു...",
+                listening_hint: "സ്വാഭാവികമായി സംസാരിക്കുക. ഒരു സംഗ്രഹം ആവശ്യപ്പെടുക, ടെക്സ്റ്റ് വായിക്കുക, അല്ലെങ്കിൽ ചുറ്റുപാടുകളെ വിവരിക്കുക.",
+                label_reading_level: "വായനാ നിലവാരം", label_voice_speed: "ശബ്ദ വേഗത",
+                label_interface: "ഇന്റർഫേസ്", label_lang: "ഭാഷ",
+                rl_simple: "ലളിതമായ", rl_medium: "ഇടത്തരം", rl_detailed: "വിശദമായ",
+                reading_hint: "ശബ്ദ വിവരണങ്ങളുടെ വിശദാംശ നിലവാരം",
+                speak_hint: "സംസാരിക്കുക. ചോദ്യങ്ങൾ ചോദിക്കാൻ നിങ്ങളുടെ ശബ്ദം ഉപയോഗിക്കുക. ആരംഭിക്കാൻ രണ്ടുതവണ ടാപ്പ് ചെയ്യുക.",
+                capture_hint: "പിടിച്ചെടുക്കുക. ഒരു ചിത്രം വിശകലനം ചെയ്യുക. ക്യാമറ തുറക്കാൻ രണ്ടുതവണ ടಾപ്പ് ചെയ്യുക.",
+                player_ready: "സ്കാൻ ചെയ്യാൻ തയ്യാറാണ്",
+                label_dark_mode: "ഇരുണ്ട മോഡ്", label_high_contrast: "ഉയർന്ന കോൺട്രാസ്റ്റ് പരിസ്ഥിതി",
+                btn_reset: "എല്ലാ ക്രമീകരണങ്ങളും റീസെറ്റ് ചെയ്യുക", app_version: "VisionAid v2.4.1",
+                label_slow: "പതുക്കെ", label_fast: "വേഗത്തിൽ",
+                menu_title: "ആക്സസിബിലിറ്റി മെനു", menu_repeat: "ആവർത്തിക്കുക",
+                menu_speed: "വേഗത മാറ്റുക", menu_level: "സങ്കീർണ്ണത",
+                menu_lang: "ഭാഷ", menu_close: "മെനു അടയ്ക്കുക"
+            },
+            mr: {
+                nav_scan: "स्कॅन", nav_history: "इतिहास", nav_settings: "सेटिंग्ज",
+                btn_speak: "बोला", btn_capture: "कॅप्चर",
+                btn_ask_question: "प्रश्न विचारा", btn_change: "बदला",
+                swipe_menu: "अॅक्सेसिबिलिटी मेनूसाठी वर स्वाइप करा",
+                text_processing: "प्रक्रिया होत आहे...", text_listening: "ऐकत आहे...",
+                listening_hint: "नैसर्गिकपणे बोला. सारांश, मजकूर वाचण्यासाठी किंवा परिसराचे वर्णन करण्यास सांगा.",
+                label_reading_level: "वाचन पातळी", label_voice_speed: "आवाजाचा वेग",
+                label_interface: "इंटरफेस", label_lang: "भाषा",
+                rl_simple: "साधे", rl_medium: "मध्यम", rl_detailed: "तपशीलवार",
+                reading_hint: "आवाज वर्णनांची तपशील पातळी",
+                speak_hint: "बोला. प्रश्न विचारण्यासाठी आपला आवाज वापरा. सुरू करण्यासाठी दोनदा टॅप करा.",
+                capture_hint: "कॅप्चर. प्रतिमेचे विश्लेषण करा. कॅमेरा उघडण्यासाठी दोनदा टॅप करा.",
+                player_ready: "स्कॅन करण्यासाठी तयार",
+                label_dark_mode: "गडद मोड", label_high_contrast: "उच्च कॉन्ट्रास्ट वातावरण",
+                btn_reset: "सर्व सेटिंग्ज रीसेट करा", app_version: "VisionAid v2.4.1",
+                label_slow: "हळू", label_fast: "जलद",
+                menu_title: "অॅक्सेसिबिलिटी मेनू", menu_repeat: "पुन्हा सांगा",
+                menu_speed: "वेग बदला", menu_level: "क्लिष्टता",
+                menu_lang: "भाषा", menu_close: "मेनू बंद करा"
+            },
+            bn: {
+                nav_scan: "স্ক্যান", nav_history: "ইতিহাস", nav_settings: "সেটিংস",
+                btn_speak: "বলুন", btn_capture: "ক্যাপচার",
+                btn_ask_question: "একটি প্রশ্ন জিজ্ঞাসা করুন", btn_change: "পরিবর্তন",
+                swipe_menu: "অ্যাক্সেসিবিলিটি মেনুর জন্য উপরে সোয়াইপ করুন",
+                text_processing: "প্রক্রিয়াকরণ...", text_listening: "শুনছি...",
+                listening_hint: "স্বাভাবিকভাবে কথা বলুন। সারসংক্ষেপ, পাঠ্য পড়া বা চারপাশের বর্ণনা দিতে বলুন।",
+                label_reading_level: "পাঠের স্তর", label_voice_speed: "ভয়েসের গতি",
+                label_interface: "ইন্টারফেস", label_lang: "ভাষা",
+                rl_simple: "সহজ", rl_medium: "মধ্যম", rl_detailed: "বিস্তারিত",
+                reading_hint: "ভয়েস বর্ণনার বিস্তারিত স্তর",
+                speak_hint: "বলুন। প্রশ্ন জিজ্ঞাসা করতে আপনার ভয়েস ব্যবহার করুন। শুরু করতে দুবার ট্যাপ করুন।",
+                capture_hint: "ক্যাপচার। একটি চিত্র বিশ্লেষণ করুন। ক্যামেরা খুলতে দুবার ট্যাপ করুন।",
+                player_ready: "স্ক্যান করার জন্য প্রস্তুত",
+                label_dark_mode: "ডার্ক মোড", label_high_contrast: "উচ্চ কনট্রাস্ট পরিবেশ",
+                btn_reset: "সমস্ত সেটিংস রিসেট করুন", app_version: "VisionAid v2.4.1",
+                label_slow: "ধীর", label_fast: "দ্রুত",
+                menu_title: "অ্যাক্সেসিবিলিটি মেনু", menu_repeat: "আবার শুনুন",
+                menu_speed: "গতি পরিবর্তন", menu_level: "জটিলতা",
+                menu_lang: "ভাষা", menu_close: "মেনু বন্ধ করুন"
+            },
+            gu: {
+                nav_scan: "સ્કેન કરો", nav_history: "ઇતિહાસ", nav_settings: "સેટિંગ્સ",
+                btn_speak: "બોલો", btn_capture: "કેપ્ચર",
+                btn_ask_question: "પ્રશ્ન પૂછો", btn_change: "બદલો",
+                swipe_menu: "એક્સેસિબિલિટી મેનૂ માટે ઉપર સ્વાઇપ કરો",
+                text_processing: "પ્રોસેસિંગ...", text_listening: "સાંભળી રહ્યું છે...",
+                listening_hint: "સ્વાભાવિક રીતે બોલો. સારાંશ, ટેક્સ્ટ વાંચવા અથવા આસપાસના વર્ણન માટે પૂછો.",
+                label_reading_level: "વાંચન સ્તર", label_voice_speed: "અવાજની ગતિ",
+                label_interface: "ઇન્ટરફેસ", label_lang: "ભાષા",
+                rl_simple: "સરળ", rl_medium: "મધ્યમ", rl_detailed: "વિગતવાર",
+                reading_hint: "અવાજ વર્ણનોનું વિગતવાર સ્તર",
+                speak_hint: "બોલો. પ્રશ્નો પૂછવા માટે તમારા અવાજનો ઉપયોગ કરો. શરૂ કરવા માટે બે વાર ટેપ કરો.",
+                capture_hint: "કેપ્ચર. છબીનું વિશ્લેષણ કરો. કેમેરા ખોલવા માટે બે વાર ટેપ કરો.",
+                player_ready: "સ્કેન કરવા માટે તૈયાર",
+                label_dark_mode: "ડાર્ક મોડ", label_high_contrast: "ઉચ્ચ કોન્ટ્રાસ્ટ વાતાવરણ",
+                btn_reset: "બધી સેટિંગ્સ રીસેટ કરો", app_version: "VisionAid v2.4.1",
+                label_slow: "ધીમું", label_fast: "ઝડપી",
+                menu_title: "એક્સેસિબિલિટી મેનૂ", menu_repeat: "ફરીથી સાંભળો",
+                menu_speed: "ગતિ બદલો", menu_level: "જટિલતા",
+                menu_lang: "ભાષા", menu_close: "મેનૂ બંધ કરો"
+            },
+            pa: {
+                nav_scan: "ਸਕੈਨ", nav_history: "ਇਤਿਹਾਸ", nav_settings: "ਸੈਟਿੰਗਜ਼",
+                btn_speak: "ਬੋਲੋ", btn_capture: "ਕੈਪਚਰ",
+                btn_ask_question: "ਸਵਾਲ ਪੁੱਛੋ", btn_change: "ਬਦਲੋ",
+                swipe_menu: "ਐਕਸੈਸਬਿਲਟੀ ਮੀਨੂ ਲਈ ਉੱਪਰ ਸਵਾਈਪ ਕਰੋ",
+                text_processing: "ਪ੍ਰੋਸੈਸਿੰਗ...", text_listening: "ਸੁਣ ਰਿਹਾ ਹੈ...",
+                listening_hint: "ਕੁਦਰਤੀ ਤੌਰ 'ਤੇ ਬੋਲੋ। ਸਾਰਾਂਸ਼ ਲਈ, ਟੈਕਸਟ ਪੜ੍ਹਨ ਜਾਂ ਆਲੇ-ਦੁਆਲੇ ਦੇ ਵਰਣਨ ਲਈ ਪੁੱਛੋ।",
+                label_reading_level: "ਪੜ੍ਹਨ ਦਾ ਪੱਧਰ", label_voice_speed: "ਆਵਾਜ਼ ਦੀ ਗਤੀ",
+                label_interface: "ਇੰਟਰਫੇਸ", label_lang: "ਭਾਸ਼ਾ",
+                rl_simple: "ਸਧਾਰਨ", rl_medium: "ਮੱਧਮ", rl_detailed: "ਵਿਸਤ੍ਰਿਤ",
+                reading_hint: "ਆਵਾਜ਼ ਦੇ ਵਰਣਨ ਦਾ ਵਿਸਤਾਰ ਪੱਧਰ",
+                speak_hint: "ਬੋਲੋ। ਸਵਾਲ ਪੁੱਛਣ ਲਈ ਆਪਣੀ ਆਵਾਜ਼ ਦੀ ਵਰਤੋਂ ਕਰੋ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਦੋ ਵਾਰ ਟੈਪ ਕਰੋ.",
+                capture_hint: "ਕੈਪਚਰ. ਇੱਕ ਚਿੱਤਰ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੋ. ਕੈਮਰਾ ਖੋਲ੍ਹਣ ਲਈ ਦੋ ਵਾਰ ਟੈਪ ਕਰੋ.",
+                player_ready: "ਸਕੈਨ ਕਰਨ ਲਈ ਤਿਆਰ",
+                label_dark_mode: "ਡਾਰਕ ਮੋਡ", label_high_contrast: "ਉੱਚ ਕੰਟਰਾਸਟ ਵਾਤਾਵਰਣ",
+                btn_reset: "ਸਾਰੀਆਂ ਸੈਟਿੰਗਾਂ ਰੀਸੈਟ ਕਰੋ", app_version: "VisionAid v2.4.1",
+                label_slow: "ਹੌਲੀ", label_fast: "ਤੇਜ਼",
+                menu_title: "ਪਹੁੰਚਯੋਗਤਾ ਮੀਨੂ", menu_repeat: "ਦੁਹਰਾਓ",
+                menu_speed: "ਗਤੀ ਬਦਲੋ", menu_level: "ਗੁੰਝਲਦਾਰਤਾ",
+                menu_lang: "ਭਾਸ਼ਾ", menu_close: "ਮੀਨੂ ਬੰਦ ਕਰੋ"
+            },
+            ur: {
+                nav_scan: "سکین", nav_history: "تاریخ", nav_settings: "سیٹنگز",
+                btn_speak: "بولیں", btn_capture: "کیپچر",
+                btn_ask_question: "سوال پوچھیں", btn_change: "بدلیں",
+                swipe_menu: "ایکسیسبلٹی مینو کے لیے اوپر سوائپ کریں",
+                text_processing: "پروسیسنگ ہو رہی ہے...", text_listening: "سن رہا ہوں...",
+                listening_hint: "فطری طور پر بولیں۔ خلاصہ، متن پڑھنے یا ماحول کی وضاحت کے لیے کہیں۔",
+                label_reading_level: "پڑھنے کی سطح", label_voice_speed: "آواز کی رفتار",
+                label_interface: "انٹرفیس", label_lang: "زبان",
+                rl_simple: "سادہ", rl_medium: "درمیانہ", rl_detailed: "تفصیلی",
+                reading_hint: "آواز کی وضاحت کی تفصیل کی سطح",
+                speak_hint: "بولیں۔ سوالات پوچھنے کے لیے اپنی آواز کا استعمال کریں۔ شروع کرنے کے لیے دو بار تھپتھائیں۔",
+                capture_hint: "کیپچر۔ تصویر کا تجزیہ کریں۔ کیمرہ کھولنے کے لیے دو بار تھپتھائیں۔",
+                player_ready: "سکین کرنے کے لیے تیار",
+                label_dark_mode: "ڈارک موڈ", label_high_contrast: "ہائی کنٹراسٹ ماحول",
+                btn_reset: "تمام سیٹنگز ری سیٹ کریں", app_version: "VisionAid v2.4.1",
+                label_slow: "آہستہ", label_fast: "تیز",
+                menu_title: "ایکسیسبلٹی مینو", menu_repeat: "دہرائیں",
+                menu_speed: "رفتار بدلیں", menu_level: "پیچیدگی",
+                menu_lang: "زبان", menu_close: "مینو بند کریں"
+            },
+            fr: {
+                nav_scan: "Scanner", nav_history: "Histoire", nav_settings: "Paramètres",
+                btn_speak: "Parler", btn_capture: "Capturer",
+                btn_ask_question: "Poser une question", btn_change: "Changer",
+                swipe_menu: "Balayez vers le haut pour le menu d'accessibilité",
+                text_processing: "Traitement...", text_listening: "Écoute...",
+                listening_hint: "Parlez naturellement. Demandez un résumé, lisez du texte ou décrivez les environs.",
+                label_reading_level: "Niveau de lecture", label_voice_speed: "Vitesse de la voix",
+                label_interface: "Interface", label_lang: "Langue",
+                rl_simple: "Simple", rl_medium: "Moyen", rl_detailed: "Détaillé",
+                reading_hint: "Niveau de détail des descriptions vocales",
+                speak_hint: "Parler. Utilisez votre voix pour poser des questions. Appuyez deux fois pour commencer.",
+                capture_hint: "Capturer. Analysez une image. Appuyez deux fois pour ouvrir l'appareil photo.",
+                player_ready: "Prêt à scanner",
+                label_dark_mode: "Mode sombre", label_high_contrast: "Environnement à contraste élevé",
+                btn_reset: "Réinitialiser tous les paramètres", app_version: "VisionAid v2.4.1",
+                label_slow: "LENT", label_fast: "RAPIDE",
+                menu_title: "Menu d'accessibilité", menu_repeat: "Répéter",
+                menu_speed: "Changer vitesse", menu_level: "Complexité",
+                menu_lang: "Langue", menu_close: "Fermer le menu"
+            },
+            es: {
+                nav_scan: "Escanear", nav_history: "Historia", nav_settings: "Configuración",
+                btn_speak: "Hablar", btn_capture: "Capturar",
+                btn_ask_question: "Hacer una pregunta", btn_change: "Cambiar",
+                swipe_menu: "Desliza hacia arriba para el menú de accesibilidad",
+                text_processing: "Procesando...", text_listening: "Escuchando...",
+                listening_hint: "Habla naturalmente. Pide un resumen, lee texto o describe los alrededores.",
+                label_reading_level: "Nivel de lectura", label_voice_speed: "Velocidad de la voz",
+                label_interface: "Interfaz", label_lang: "Idioma",
+                rl_simple: "Simple", rl_medium: "Medio", rl_detailed: "Detallado",
+                reading_hint: "Nivel de detalle de las descripciones de voz",
+                speak_hint: "Hablar. Usa tu voz para hacer preguntas. Toca dos veces para comenzar.",
+                capture_hint: "Capturar. Analiza una imagen. Toca dos veces para abrir la cámara.",
+                player_ready: "Listo para escanear",
+                label_dark_mode: "Modo oscuro", label_high_contrast: "Entorno de alto contraste",
+                btn_reset: "Restablecer todos los ajustes", app_version: "VisionAid v2.4.1",
+                label_slow: "LENTO", label_fast: "RÁPIDO",
+                menu_title: "Menú de accesibilidad", menu_repeat: "Repetir",
+                menu_speed: "Cambiar velocidad", menu_level: "Complejidad",
+                menu_lang: "Idioma", menu_close: "Cerrar menú"
+            },
+            de: {
+                nav_scan: "Scannen", nav_history: "Geschichte", nav_settings: "Einstellungen",
+                btn_speak: "Sprechen", btn_capture: "Erfassen",
+                btn_ask_question: "Frage stellen", btn_change: "Ändern",
+                swipe_menu: "Wischen Sie nach oben für das Barrierefreiheitsmenü",
+                text_processing: "Verarbeitung...", text_listening: "Zuhören...",
+                listening_hint: "Sprechen Sie ganz natürlich. Fragen Sie nach einer Zusammenfassung, lesen Sie Text oder beschreiben Sie die Umgebung.",
+                label_reading_level: "Leselevel", label_voice_speed: "Sprachgeschwindigkeit",
+                label_interface: "Schnittstelle", label_lang: "Sprache",
+                rl_simple: "Einfach", rl_medium: "Mittel", rl_detailed: "Detailliert",
+                reading_hint: "Detaillierungsgrad der Sprachbeschreibungen",
+                speak_hint: "Sprechen. Verwenden Sie Ihre Stimme, um Fragen zu stellen. Doppeltippen zum Starten.",
+                capture_hint: "Erfassen. Analysieren Sie ein Bild. Doppeltippen, um die Kamera zu öffnen.",
+                player_ready: "Bereit zum Scannen",
+                label_dark_mode: "Dunkelmodus", label_high_contrast: "Umgebung mit hohem Kontrast",
+                btn_reset: "Alle Einstellungen zurücksetzen", app_version: "VisionAid v2.4.1",
+                label_slow: "LANGSAM", label_fast: "SCHNELL",
+                menu_title: "Barrierefreiheitsmenü", menu_repeat: "Wiederholen",
+                menu_speed: "Tempo ändern", menu_level: "Komplexität",
+                menu_lang: "Sprache", menu_close: "Menü schließen"
+            },
+            ja: {
+                nav_scan: "スキャン", nav_history: "履歴", nav_settings: "設定",
+                btn_speak: "話す", btn_capture: "キャプチャー",
+                btn_ask_question: "質問する", btn_change: "変更",
+                swipe_menu: "アクセシビリティメニューを表示するには上にスワイプしてください",
+                text_processing: "処理中...", text_listening: "聴取中...",
+                listening_hint: "自然に話してください。要約、テキストの読み上げ、または周囲の状況の説明を依頼してください。",
+                label_reading_level: "読書レベル", label_voice_speed: "音声速度",
+                label_interface: "インターフェース", label_lang: "言語",
+                rl_simple: "シンプル", rl_medium: "中", rl_detailed: "詳細",
+                reading_hint: "音声解説の詳細レベル",
+                speak_hint: "話す。音声を使って質問してください。開始するにはダブルタップします。",
+                capture_hint: "キャプチャー。画像を分析します。カメラを開くにはダブルタップします。",
+                player_ready: "スキャン準備完了",
+                label_dark_mode: "ダークモード", label_high_contrast: "ハイコントラスト環境",
+                btn_reset: "すべての設定をリセット", app_version: "VisionAid v2.4.1",
+                label_slow: "遅い", label_fast: "速い",
+                menu_title: "アクセシビリティメニュー", menu_repeat: "繰り返す",
+                menu_speed: "速度変更", menu_level: "複雑さ",
+                menu_lang: "言語", menu_close: "メニューを閉じる"
+            }
+        };
+
+        let currentLang = localStorage.getItem('visionAidLang') || 'en';
+        let targetLang = localStorage.getItem('visionAidTargetLang') || currentLang;
+        let currentSpeed = 1.0;
+        let currentReadingLevel = localStorage.getItem('visionAidReadingLevel') || 'medium';
+        let historyData = JSON.parse(localStorage.getItem('visionAidHistory') || '[]');
+        let currentSummaryEN = "";
+        let audioPlayer = new Audio();
+        
+        let currentView = 'home';
+        let previousView = 'home';
+        
+        let isDarkMode = localStorage.getItem('visionAidTheme') !== 'light';
+        
+        function applyTheme() {
+            document.documentElement.classList.toggle('dark', isDarkMode);
+            if (isDarkMode) {
+                document.body.classList.remove('light-mode');
+            } else {
+                document.body.classList.add('light-mode');
+            }
+            const themeLabel = isDarkMode ? "Dark Mode On" : "Light Mode On";
+            // speak(themeLabel); // Commented out to avoid speaking on every theme application
+            const toggle = document.getElementById('dark-mode-toggle');
+            if (toggle) toggle.checked = isDarkMode;
+        }
+
+        function toggleTheme(checked) {
+            isDarkMode = checked;
+            localStorage.setItem('visionAidTheme', isDarkMode ? 'dark' : 'light');
+            applyTheme();
+        }
+        
+        // --- NAVIGATION ---
+        function nav(viewId) {
+            // Stop speech when navigating away from a response/active view
+            if (currentView === 'player' || currentView === 'history' || viewId === 'home') {
+                speechSynthesis.cancel();
+                if (audioPlayer) {
+                    audioPlayer.pause();
+                    audioPlayer.currentTime = 0;
+                }
+            }
+
+            previousView = currentView;
+            currentView = viewId;
+
+            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+            const target = document.getElementById('view-' + viewId);
+            if (target) target.classList.add('active');
+            
+            // Update bottom nav active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                const isActive = item.getAttribute('onclick').includes(viewId === 'saved-audio' || viewId === 'history' ? 'saved-audio' : viewId);
+                item.classList.toggle('active-nav', isActive);
+            });
+
+            if (viewId === 'languages') renderLanguagePicker();
+            if (viewId === 'player') renderPlayerHeader();
+
+            window.scrollTo(0, 0);
+        }
+
+        // --- i18n ---
+        function translateUI() {
+            const labels = UI_LABELS[currentLang] || UI_LABELS.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (labels[key]) el.innerText = labels[key];
+            });
+            // Update camera input capture for translation if needed
+            // No specific camera tag to translate, but we could add one.
+        }
+
+        // --- ONLINE STATUS ---
+        function updateOnlineStatus() {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            const staticDot = document.querySelector('header .bg-accent-yellow'); // The one next to VISIONAID
+            
+            if (navigator.onLine) {
+                if (dot) dot.className = "w-2 h-2 rounded-full bg-accent-yellow animate-pulse-glow";
+                if (text) {
+                    text.innerText = "Online";
+                    text.className = "text-[10px] uppercase font-bold tracking-widest text-accent-yellow";
+                }
+                if (staticDot) staticDot.className = "w-2 h-2 rounded-full bg-accent-yellow shadow-[0_0_12px_rgba(255,216,77,0.9)] animate-pulse-glow";
+            } else {
+                if (dot) dot.className = "w-2 h-2 rounded-full bg-white/20";
+                if (text) {
+                    text.innerText = "Offline";
+                    text.className = "text-[10px] uppercase font-bold tracking-widest text-white/40";
+                }
+                if (staticDot) staticDot.className = "w-2 h-2 rounded-full bg-white/20 shadow-none";
+            }
+        }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        // --- READING LEVEL ---
+        function setReadingLevel(level) {
+            currentReadingLevel = level;
+            localStorage.setItem('visionAidReadingLevel', level);
+            
+            // Update UI
+            ['simple', 'medium', 'detailed'].forEach(l => {
+                const btn = document.getElementById('rl-' + l);
+                if (btn) {
+                    if (l === level) {
+                        btn.classList.remove('opacity-40');
+                        btn.classList.add('bg-white/5', 'rounded-xl', 'border-b-2', 'border-accent-yellow');
+                    } else {
+                        btn.classList.add('opacity-40');
+                        btn.classList.remove('bg-white/5', 'rounded-xl', 'border-b-2', 'border-accent-yellow');
+                    }
+                }
+            });
+            const levelLabel = UI_LABELS[currentLang] ? UI_LABELS[currentLang]['rl_' + level] : level;
+            speak(levelLabel);
+        }
+
+        // --- ACCESSIBILITY HELPER ---
+        let lastTap = 0;
+        function a11yClick(event, callback, labelKey) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            // IMMEDIATE STOP: Stop any current speech or audio as soon as interaction starts
+            speechSynthesis.cancel();
+            if (audioPlayer) {
+                audioPlayer.pause();
+            }
+
+            const now = Date.now();
+            const delta = now - lastTap;
+            console.log(`DEBUG: a11yClick triggered. Delta: ${delta}ms`);
+            
+            if (delta > 0 && delta < 500) { 
+                console.log("DEBUG: Double-tap detected!");
+                lastTap = 0;
+                callback();
+            } else {
+                if (isProcessingAI) {
+                    console.log("DEBUG: Single-tap ignored (isProcessingAI=true)");
+                    return;
+                }
+                const labels = UI_LABELS[currentLang] || UI_LABELS.en;
+                const text = labels[labelKey] || labelKey;
+                console.log(`DEBUG: Single-tap. Speaking hint: ${text}`);
+                speak(text);
+            }
+            lastTap = now;
+        }
+
+        // Changes UI language + Sets default target language (Global)
+        async function setInterfaceLang(lang) {
+            if (isProcessingAI) return;
+            currentLang = lang;
+            targetLang = lang; 
+            localStorage.setItem('visionAidLang', lang);
+            localStorage.setItem('visionAidTargetLang', lang);
+            translateUI();
+            renderPlayerHeader();
+            if (currentView === 'player' && currentSummaryEN) {
+                translateActiveSummary(lang);
+            }
+        }
+
+        // Only changes translation target (Top Bar)
+        async function switchTargetLang(lang) {
+            if (isProcessingAI || lang === targetLang) return;
+            targetLang = lang;
+            localStorage.setItem('visionAidTargetLang', lang);
+            renderPlayerHeader(); 
+            translateActiveSummary(lang);
+        }
+
+        async function translateActiveSummary(lang) {
+            if (!currentSummaryEN) return;
+            const titleEl = document.getElementById('player-title');
+            // USE INTERFACE LANG for "Processing..." hint
+            if (titleEl) titleEl.innerText = (UI_LABELS[currentLang] ? UI_LABELS[currentLang].text_processing : 'Translating...');
+            
+            audioPlayer.pause();
+            speechSynthesis.cancel();
+
+            try {
+                const response = await fetch(N8N_TRANSLATE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: currentSummaryEN, lang: lang })
+                });
+                const data = await response.json();
+                const resultText = data.translated_text || data.ai_summary;
+                if (titleEl) titleEl.innerText = resultText.length > 40 ? resultText.slice(0, 40) + '...' : resultText;
+                
+                if (data.audio_file) {
+                    audioPlayer.src = FLASK_URL_BASE + data.audio_file;
+                    audioPlayer.play().catch(() => {});
+                    updatePlayIcon(true);
+                } else {
+                    speakContent(resultText); // Use TARGET voice
+                }
+            } catch (err) {
+                if (titleEl) titleEl.innerText = 'Translation failed';
+            }
+        }
+        
+        // --- VOICE INTERACTION ---
+        function startListening() {
+            if (isProcessingAI) return;
+            console.log("DEBUG: startListening triggered");
+            speechSynthesis.cancel();
+            if (audioPlayer) audioPlayer.pause();
+            
+            nav('focus');
+            if ('webkitSpeechRecognition' in window) {
+                if (recognition) try { recognition.stop(); } catch(e) {}
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = targetLang;
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onresult = (event) => {
+                    const result = event.results[event.results.length - 1];
+                    if (result.isFinal) {
+                        const text = result[0].transcript;
+                        try { recognition.stop(); } catch(e) {}
+                        processVoiceCommand(text);
+                    }
+                };
+                recognition.onerror = (err) => {
+                    console.error("Speech recognition error:", err);
+                    stopListening();
+                };
+                recognition.onend = () => {
+                    // Handled
+                };
+                recognition.start();
+            } else {
+                setTimeout(() => processVoiceCommand("What is this?"), 3000);
+            }
+        }
+
+        function stopListening() { 
+            if (recognition) try { recognition.stop(); } catch(e) {}
+            if (!isProcessingAI) nav('home'); 
+        }
+
+        async function processVoiceCommand(text) {
+            if (isProcessingAI) return;
+            isProcessingAI = true;
+            nav('processing');
+            const labels = UI_LABELS[currentLang] || UI_LABELS.en;
+            speak(labels.text_processing || "Processing");
+            try {
+                const response = await fetch(N8N_CHAT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, lang: targetLang, reading_level: currentReadingLevel })
+                });
+                const data = await response.json();
+                // processResult will handle releasing the lock
+                processResult(data);
+            } catch (e) {
+                isProcessingAI = false;
+                nav('home');
+                speak("Connection error.");
+            }
+        }
+
+        // --- IMAGE CAPTURE ---
+        function triggerCapture() { 
+            if (isProcessingAI) return;
+            document.getElementById('camera-input').click(); 
+        }
+
+        async function handleFileSelect(input) {
+            if (isProcessingAI || !input.files || !input.files[0]) return;
+            const file = input.files[0];
+            input.value = '';
+            
+            isProcessingAI = true;
+            nav('processing');
+            const labels = UI_LABELS[currentLang] || UI_LABELS.en;
+            speak(labels.text_processing || "Processing");
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('lang', targetLang);
+            formData.append('reading_level', currentReadingLevel);
+            try {
+                const response = await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
+                const data = await response.json();
+                isProcessingAI = false;
+                processResult(data);
+            } catch (err) {
+                isProcessingAI = false;
+                nav('home');
+                speak("Failed to process image.");
+            }
+        }
+
+        async function processResult(data) {
+            try {
+                const summary = data.ai_summary || "No information found.";
+                currentSummaryEN = summary;
+                const newItem = {
+                    id: Date.now().toString(),
+                    title: summary.length > 40 ? summary.slice(0, 40) + '...' : summary,
+                    summary: summary,
+                    audioUrl: data.audio_file ? (data.audio_file.startsWith('http') ? data.audio_file : FLASK_URL_BASE + data.audio_file) : null,
+                    timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        + " • " + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+                };
+                historyData.unshift(newItem);
+                localStorage.setItem('visionAidHistory', JSON.stringify(historyData));
+                renderHistory();
+                
+                nav('player');
+                if (targetLang !== 'en') {
+                    setupPlayer(newItem, true); // Partial setup
+                    await translateActiveSummary(targetLang);
+                } else {
+                    setupPlayer(newItem);
+                }
+            } finally {
+                isProcessingAI = false;
+            }
+        }
+    
+
+        // --- PLAYER ---
+        function renderPlayerHeader() {
+            const container = document.getElementById('player-lang-bar');
+            if (!container) return;
+            container.innerHTML = '';
+            // Show priority: Target, then TE, HI, TA, then others up to 5
+            const priority = [targetLang, 'te', 'hi', 'ta', 'kn'].filter((v, i, a) => a.indexOf(v) === i);
+            const others = LANGUAGES.map(l => l.code).filter(c => !priority.includes(c));
+            const displayList = [...priority, ...others];
+
+            displayList.forEach(code => {
+                const lang = LANGUAGES.find(l => l.code === code);
+                if (!lang) return;
+                const btn = document.createElement('button');
+                btn.innerText = lang.label;
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    switchTargetLang(lang.code);
+                };
+                const isActive = lang.code === targetLang;
+                btn.className = isActive 
+                    ? "text-accent-yellow border-b-2 border-accent-yellow pb-1 font-bold shrink-0" 
+                    : "text-white/40 hover:text-white/60 font-medium shrink-0";
+                container.appendChild(btn);
+            });
+        }
+
+        function setupPlayer(item, noSpeak = false) {
+            const titleEl = document.getElementById('player-title');
+            if (titleEl) titleEl.innerText = item.title;
+            renderPlayerHeader();
+            if (noSpeak) return;
+            if (item.audioUrl) {
+                audioPlayer.src = item.audioUrl;
+                audioPlayer.playbackRate = currentSpeed;
+                audioPlayer.play().catch(() => {});
+                updatePlayIcon(true);
+            } else {
+                speakContent(item.summary);
+            }
+        }
+
+        function togglePlay() {
+            if (audioPlayer.src && audioPlayer.src !== window.location.href && audioPlayer.src !== "") {
+                if (audioPlayer.paused) { audioPlayer.play(); updatePlayIcon(true); } 
+                else { audioPlayer.pause(); updatePlayIcon(false); }
+            } else { speakContent(currentSummaryEN); }
+        }
+
+        function updatePlayIcon(isPlaying) {
+            const icon = document.getElementById('play-icon');
+            if (icon) icon.innerText = isPlaying ? 'pause' : 'play_arrow';
+        }
+
+        // Speak UI labels/hints (uses currentLang)
+        function speak(text) {
+            if (!text) return;
+            speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = currentLang;
+            u.rate = currentSpeed;
+            u.onstart = () => updatePlayIcon(true);
+            u.onend = () => updatePlayIcon(false);
+            speechSynthesis.speak(u);
+        }
+
+        // Speak Scanned Content (uses targetLang)
+        function speakContent(text) {
+            if (!text) return;
+            speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = targetLang;
+            u.rate = currentSpeed;
+            u.onstart = () => updatePlayIcon(true);
+            u.onend = () => updatePlayIcon(false);
+            speechSynthesis.speak(u);
+        }
+
+        function adjustSpeed(delta) {
+            currentSpeed = Math.max(0.5, Math.min(2.0, Math.round((currentSpeed + delta) * 10) / 10));
+            syncSpeedUI();
+        }
+
+        function updateSpeedFromSlider(val) {
+            currentSpeed = parseFloat(val);
+            syncSpeedUI();
+        }
+
+        function syncSpeedUI() {
+            const speedLabel = document.getElementById('speed-label');
+            if (speedLabel) speedLabel.innerText = currentSpeed + "x";
+            const settingsLabel = document.getElementById('settings-speed-label');
+            if (settingsLabel) settingsLabel.innerText = currentSpeed + "x";
+            audioPlayer.playbackRate = currentSpeed;
+        }
+
+        // --- LANGUAGES ---
+        function renderLanguagePicker() {
+            const list = document.getElementById('languages-list');
+            if (!list) return;
+            list.innerHTML = '';
+            LANGUAGES.forEach(lang => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-5 rounded-2xl bg-surface-dark border border-white/5 cursor-pointer active:scale-[0.98] transition-all";
+                row.onclick = () => {
+                    setInterfaceLang(lang.code);
+                    nav(previousView || 'home');
+                };
+                
+                const label = document.createElement('span');
+                label.className = "text-lg font-medium " + (lang.code === currentLang ? "text-accent-yellow" : "text-white");
+                label.innerText = lang.name;
+                
+                const icon = document.createElement('span');
+                icon.className = "material-symbols-outlined " + (lang.code === currentLang ? "text-accent-yellow" : "text-white/20");
+                icon.innerText = lang.code === currentLang ? "check_circle" : "circle";
+                
+                row.appendChild(label);
+                row.appendChild(icon);
+                list.appendChild(row);
+            });
+        }
+
+        // (Removed orphaned switchLang and translateActiveSummary)
+
+        // --- GESTURES ---
+        let touchStartY = 0;
+        function setupGestures() {
+            document.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+            }, false);
+
+            document.addEventListener('touchend', (e) => {
+                const touchEndY = e.changedTouches[0].clientY;
+                if (touchStartY - touchEndY > 100) { // Swipe up
+                    if (['home', 'player', 'history'].includes(currentView)) {
+                        openA11yMenu();
+                    }
+                }
+            }, false);
+        }
+
+        function openA11yMenu() {
+            if (isProcessingAI) return;
+            const menu = document.getElementById('view-a11y-menu');
+            const content = document.getElementById('a11y-menu-content');
+            if (menu && content) {
+                menu.classList.remove('opacity-0', 'pointer-events-none');
+                content.classList.remove('translate-y-full');
+                translateUI(); // Ensure labels are fresh
+                speak(UI_LABELS[currentLang]?.menu_title || "Accessibility Menu");
+            }
+        }
+
+        function closeA11yMenu() {
+            const menu = document.getElementById('view-a11y-menu');
+            const content = document.getElementById('a11y-menu-content');
+            if (menu && content) {
+                menu.classList.add('opacity-0', 'pointer-events-none');
+                content.classList.add('translate-y-full');
+                speak(UI_LABELS[currentLang]?.menu_close || "Menu Closed");
+            }
+        }
+
+        function repeatLastSummary() {
+            closeA11yMenu();
+            if (currentSummaryEN) {
+                if (currentView === 'player' && targetLang !== 'en') {
+                    translateActiveSummary(targetLang);
+                } else {
+                    speakContent(currentSummaryEN);
+                }
+            } else {
+                const labels = UI_LABELS[currentLang] || UI_LABELS.en;
+                speak(labels.player_ready || "Ready to Scan");
+            }
+        }
+
+        function cycleVoiceSpeed() {
+            const speeds = [0.5, 1.0, 1.5, 2.0];
+            let nextIndex = (speeds.indexOf(currentSpeed) + 1) % speeds.length;
+            if (nextIndex === -1) nextIndex = 1; // Fallback to 1.0
+            currentSpeed = speeds[nextIndex];
+            syncSpeedUI();
+            const labels = UI_LABELS[currentLang] || UI_LABELS.en;
+            speak((labels.label_voice_speed || "Speed") + " " + currentSpeed + "x");
+        }
+
+        function cycleReadingLevel() {
+            const levels = ['simple', 'medium', 'detailed'];
+            let nextIndex = (levels.indexOf(currentReadingLevel) + 1) % levels.length;
+            setReadingLevel(levels[nextIndex]);
+        }
+
+        window.onload = () => {
+            applyTheme();
+            updateOnlineStatus();
+            setupGestures();
+            renderHistory();
+            translateUI();
+        };
+
+        // --- HISTORY LOGIC ---
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            const template = document.getElementById('history-template');
+            if (!list || !template) return;
+            list.innerHTML = '';
+            historyData.forEach((item, index) => {
+                const clone = template.content.cloneNode(true);
+                const root = clone.querySelector('div');
+                root.dataset.id = item.id;
+                root.style.animationDelay = `${index * 0.1}s`;
+                clone.querySelector('h3').innerText = item.title;
+                clone.querySelector('p').innerText = item.timestamp;
+                list.appendChild(clone);
+            });
+        }
+
+        async function playHistoryItem(id) {
+            const item = historyData.find(i => i.id === id);
+            if (item) {
+                currentSummaryEN = item.summary;
+                isProcessingAI = true;
+                if (targetLang !== 'en') {
+                    setupPlayer(item, true); // Partial setup
+                    await translateActiveSummary(targetLang);
+                } else {
+                    setupPlayer(item);
+                }
+                isProcessingAI = false;
+                nav('player');
+            }
+        }
+
+        // Initial Load
+        applyTheme();
+        updateOnlineStatus();
+        translateUI();
+        renderHistory();
+        syncSpeedUI();
+        setReadingLevel(currentReadingLevel);
+    </script>
+</body>
+</html>

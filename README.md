@@ -1,4 +1,4 @@
-# 👁️ VisionAid: AI-Powered Verbal Accessibility Assistant
+# 👁️ VisionAid AI - AI Accessibility Assistant
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Live Deployment](https://img.shields.io/badge/Render-Live%20Deployment-success?logo=render)](https://visionaid-api.onrender.com)
@@ -6,7 +6,7 @@
 [![Android](https://img.shields.io/badge/Platform-Android%20Native%20(Compose)-3DDC84?logo=android)](android_native/)
 [![Python](https://img.shields.io/badge/Backend-Python%20%7C%20Flask%20%7C%20Docker-3776AB?logo=python)](app.py)
 
-> **VisionAid** is a multi-modal, verbal accessibility assistant designed to empower visually impaired and illiterate individuals. It transforms real-world visual and textual information into natural, concise verbal feedback across **15+ regional and global languages**.
+> **VisionAid AI - AI Accessibility Assistant** is a multi-modal, verbal accessibility assistant designed to empower visually impaired and illiterate individuals. It transforms real-world visual and textual information into natural, concise verbal feedback across **15+ regional and global languages**.
 
 ---
 

@@ -145,7 +145,7 @@ def serve_audio(filename):
 def health():
     return jsonify({
         "status": "ok",
-        "message": "Accessibility Assistant is running"
+        "message": "VisionAid AI - AI Accessibility Assistant is running"
     }), 200
 
 
@@ -345,7 +345,7 @@ def translate():
 @app.route('/mobile')
 def serve_mobile():
     """Serve the mobile-optimized version of VisionAid."""
-    return send_from_directory('.', 'vision_aid_mobile.html')
+    return send_from_directory('.', 'vision_aid.html')
 
 @app.route('/manifest.json')
 def serve_manifest():
