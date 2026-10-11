@@ -87,8 +87,8 @@ graph TD
 ### 1. Backend Setup
 ```bash
 # Clone the repository
-git clone https://github.com/rithvikkaki/visionaid-api.git
-cd visionaid-api
+git clone https://github.com/rithvikkaki/VisionAid-AI-Accessibility-Assistant.git
+cd VisionAid-AI-Accessibility-Assistant
 
 # Create virtual environment
 python -m venv .venv
